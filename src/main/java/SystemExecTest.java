@@ -9,8 +9,7 @@ public class SystemExecTest {
 
     public static void main(String[] args) {
         System.out.println("SystemExecTest");
-        test(new int[]{1,1,1},20);
-        //testManual();
+        test(new int[]{8, 8, 8, 8, 8},20);
     }
 
     private static void test(int[] policy, int taskCount) {
@@ -26,7 +25,7 @@ public class SystemExecTest {
                 int firstQueue = r.nextInt(queueCount);
                 int lastQueue = firstQueue + r.nextInt(queueCount - firstQueue);
                 boolean keepOrder = r.nextBoolean();
-                long workTime = (long) r.nextInt(500);
+                long workTime = (long) r.nextInt(1000);
                 TestTask task = new TestTask(firstQueue, lastQueue, index++, keepOrder, workTime);
                 system.addTask(task);
             }

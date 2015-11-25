@@ -1,4 +1,3 @@
-
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -13,40 +12,14 @@ class SystemExec implements SystemInterface {
     /** All queue objects with their workers */
     private ArrayList<SystemQueue> mSystemQueues;
 
-    /** Last id of task in system, that needs to keep order*/
+    /** Last id of task added to system, that needs to keep order*/
     private int mLastAddedOrderedTaskId = -1;
 
-    /** Most recent finished task id, that needs to keep order*/
+    /** Last finished task id, that needs to keep order*/
     private int mRecentlyFinishedOrderedTaskId = -1;
 
-    /** Most recent finished task lock*/
+    /** Last finished task lock*/
     private final ReadWriteLock mRecentlyFinishedOrderedTaskIdLock = new ReentrantReadWriteLock(true);
-
-    private void writeRecentlyFinishedOrderedTaskId(int id) {
-        mRecentlyFinishedOrderedTaskIdLock.writeLock().lock();
-        try {
-            this.mRecentlyFinishedOrderedTaskId = id;
-        } finally {
-            mRecentlyFinishedOrderedTaskIdLock.writeLock().unlock();
-        }
-    }
-
-    private int readRecentlyFinishedOrderedTaskId() {
-        int result;
-        mRecentlyFinishedOrderedTaskIdLock.readLock().lock();
-        try {
-            result = mRecentlyFinishedOrderedTaskId;
-        } finally {
-            mRecentlyFinishedOrderedTaskIdLock.readLock().unlock();
-        }
-        return result;
-    }
-
-    private synchronized int updateLastAddedOrderedTaskId(int id) {
-        int lastId = mLastAddedOrderedTaskId;
-        this.mLastAddedOrderedTaskId = id;
-        return lastId;
-    }
 
     @Override
     public void setNumberOfQueues(int queues) {
@@ -77,12 +50,30 @@ class SystemExec implements SystemInterface {
         new Thread(new DispatchNewTask(task)).run();
     }
 
-    public String toString() {
-        String result = "";
-        for (SystemQueue q : mSystemQueues) {
-            result += q.toString() + "\n";
+    private void writeRecentlyFinishedOrderedTaskId(int id) {
+        mRecentlyFinishedOrderedTaskIdLock.writeLock().lock();
+        try {
+            this.mRecentlyFinishedOrderedTaskId = id;
+        } finally {
+            mRecentlyFinishedOrderedTaskIdLock.writeLock().unlock();
+        }
+    }
+
+    private int readRecentlyFinishedOrderedTaskId() {
+        int result;
+        mRecentlyFinishedOrderedTaskIdLock.readLock().lock();
+        try {
+            result = mRecentlyFinishedOrderedTaskId;
+        } finally {
+            mRecentlyFinishedOrderedTaskIdLock.readLock().unlock();
         }
         return result;
+    }
+
+    private synchronized int updateLastAddedOrderedTaskId(int id) {
+        int lastId = mLastAddedOrderedTaskId;
+        this.mLastAddedOrderedTaskId = id;
+        return lastId;
     }
 
     /**
@@ -97,6 +88,14 @@ class SystemExec implements SystemInterface {
         if (task != null) {
             mSystemQueues.get(fromQueueId+1).addTask(task);
         }
+    }
+
+    public String toString() {
+        String result = "";
+        for (SystemQueue q : mSystemQueues) {
+            result += q.toString() + "\n";
+        }
+        return result;
     }
 
     /**
@@ -321,11 +320,9 @@ class SystemExec implements SystemInterface {
             return mTaskInterface.getLastQueue();
         }
 
-
         public int getTaskID() {
             return mTaskInterface.getTaskID();
         }
-
 
         public boolean keepOrder() {
             return mTaskInterface.keepOrder();
@@ -340,7 +337,6 @@ class SystemExec implements SystemInterface {
         }
 
     }
-
 
 
 }
